@@ -11,6 +11,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.ForwardingPlayer
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -24,6 +25,7 @@ class MusicService : MediaSessionService() {
     
     private var mediaSession: MediaSession? = null
     private lateinit var player: ExoPlayer
+    private lateinit var wrappedPlayer: Player
     
     companion object {
         private const val NOTIFICATION_ID = 1
@@ -47,6 +49,33 @@ class MusicService : MediaSessionService() {
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
             .build()
+        
+        // Wrap player to intercept stop() calls and convert to pause() when playing
+        // This ensures earbud button presses pause instead of stop
+        wrappedPlayer = object : ForwardingPlayer(player) {
+            private var shouldInterceptStop = false
+            
+            override fun stop() {
+                // If player is playing, pause instead of stop (for earbud button presses)
+                if (player.isPlaying) {
+                    shouldInterceptStop = true
+                    player.pause()
+                } else {
+                    // Only stop if already paused/stopped (explicit stop from UI)
+                    player.stop()
+                }
+            }
+            
+            override fun pause() {
+                shouldInterceptStop = false
+                super.pause()
+            }
+            
+            override fun play() {
+                shouldInterceptStop = false
+                super.play()
+            }
+        }
     }
     
     private fun initializeMediaSession() {
@@ -57,7 +86,9 @@ class MusicService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE
         )
         
-        mediaSession = MediaSession.Builder(this, player)
+        // Use wrappedPlayer which intercepts stop() calls and converts them to pause() when playing
+        // This ensures earbud button presses pause instead of stop
+        mediaSession = MediaSession.Builder(this, wrappedPlayer)
             .setSessionActivity(sessionActivityPendingIntent)
             .build()
     }
