@@ -99,7 +99,7 @@ Browse your music collection by:
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd android_music_player
+   cd jPod
    ```
 
 2. **Open in Android Studio**
@@ -298,10 +298,10 @@ adb -s ABC123DEF456 shell am broadcast -a android.intent.action.MEDIA_SCANNER_SC
 #### 5. Restart jPod App
 ```bash
 # Force stop app to clear any cached music data:
-adb shell am force-stop com.example.android_music_player
+adb shell am force-stop com.stratej.jpod
 
 # Launch jPod:
-adb shell am start -n com.example.android_music_player/.MainActivity
+adb shell am start -n com.stratej.jpod/.MainActivity
 ```
 
 #### Troubleshooting Common Issues

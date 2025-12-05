@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.android_music_player"
+    namespace = "com.stratej.jpod"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.android_music_player"
+        applicationId = "com.stratej.jpod"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

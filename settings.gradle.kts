@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "android_music_player"
+rootProject.name = "jPod"
 include(":app")
