@@ -32,6 +32,15 @@ import kotlinx.coroutines.launch
  */
 class MusicPlayerViewModel(application: Application) : AndroidViewModel(application) {
     
+    companion object {
+        /**
+         * Threshold in milliseconds for skip back behavior.
+         * If the current position is less than this value, skip to previous song.
+         * Otherwise, restart the current song from the beginning.
+         */
+        private const val SKIP_BACK_THRESHOLD_MS = 5000L // 5 seconds
+    }
+    
     private val context = getApplication<Application>()
     private val musicScanner = MusicScanner(context)
     private val playlistManager = PlaylistManager(context)
@@ -351,12 +360,57 @@ class MusicPlayerViewModel(application: Application) : AndroidViewModel(applicat
     
     /**
      * Skip to previous track
+     * If the current position is less than SKIP_BACK_THRESHOLD_MS, skip to the previous song.
+     * Otherwise, restart the current song from the beginning.
      */
     fun skipToPrevious() {
         mediaController?.let { controller ->
-            if (controller.hasPreviousMediaItem()) {
-                controller.seekToPrevious()
-                // Index update handled by onMediaItemTransition listener
+            // Get position from controller (most accurate)
+            val currentPosition = controller.currentPosition
+            val playlist = _currentPlaylist.value
+            val currentIndex = _currentSongIndex.value
+            
+            if (currentPosition >= SKIP_BACK_THRESHOLD_MS) {
+                // Restart the current song from the beginning
+                controller.seekTo(0L)
+                _playerState.value = _playerState.value.copy(currentPosition = 0L)
+            } else {
+                // Skip to previous song if available
+                if (currentIndex > 0 && playlist.isNotEmpty()) {
+                    // We have a previous song - seek to it directly using the media item index
+                    val previousIndex = currentIndex - 1
+                    val wasPlaying = controller.isPlaying
+                    
+                    // Seek to the previous media item
+                    controller.seekTo(previousIndex, 0L)
+                    
+                    // Update our state immediately
+                    _currentSongIndex.value = previousIndex
+                    val previousSong = playlist[previousIndex]
+                    _playerState.value = _playerState.value.copy(
+                        currentSong = previousSong,
+                        currentPosition = 0L
+                    )
+                    
+                    // Restore playback state
+                    if (wasPlaying) {
+                        controller.play()
+                    }
+                    
+                    // Track recently played
+                    viewModelScope.launch {
+                        playlistManager.addToRecentlyPlayed(previousSong.id)
+                        loadRecentlyPlayed()
+                    }
+                } else if (controller.hasPreviousMediaItem()) {
+                    // Fallback: use controller's seekToPrevious
+                    controller.seekToPrevious()
+                    // Index update handled by onMediaItemTransition listener
+                } else {
+                    // If no previous song, just restart the current song
+                    controller.seekTo(0L)
+                    _playerState.value = _playerState.value.copy(currentPosition = 0L)
+                }
             }
         }
     }
