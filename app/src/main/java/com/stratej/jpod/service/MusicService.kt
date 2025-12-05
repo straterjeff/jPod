@@ -130,7 +130,7 @@ class MusicService : MediaSessionService() {
     /**
      * Play a list of songs starting from a specific index
      */
-    fun playSongs(songs: List<com.example.android_music_player.data.Song>, startIndex: Int = 0) {
+    fun playSongs(songs: List<com.stratej.jpod.data.Song>, startIndex: Int = 0) {
         val mediaItems = songs.map { song ->
             MediaItem.Builder()
                 .setUri(song.uri)
@@ -146,7 +146,7 @@ class MusicService : MediaSessionService() {
     /**
      * Play a single song
      */
-    fun playSong(song: com.example.android_music_player.data.Song) {
+    fun playSong(song: com.stratej.jpod.data.Song) {
         val mediaItem = MediaItem.Builder()
             .setUri(song.uri)
             .setMediaId(song.id.toString())
