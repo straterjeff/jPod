@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -80,9 +81,13 @@ fun MusicPlayerApp() {
 @Composable
 fun MusicPlayerAppContent() {
     // Navigation state
-    var currentScreen by remember { mutableStateOf("home") }
-    var currentCategory by remember { mutableStateOf<BrowseCategory?>(null) }
+    var currentScreen by remember { mutableStateOf("browse") }
+    var currentCategory by remember { mutableStateOf<BrowseCategory?>(BrowseCategory.ALBUMS) }
     var currentCategoryItem by remember { mutableStateOf<CategoryItem?>(null) }
+
+    // Scroll state hoisted here so it survives navigation to/from category_songs
+    val browseListState = rememberLazyListState()
+    val browseArtistListState = rememberLazyListState()
     
     when (currentScreen) {
         "home" -> {
@@ -97,14 +102,16 @@ fun MusicPlayerAppContent() {
             currentCategory?.let { category ->
                 BrowseScreen(
                     category = category,
-                    onBackClick = { 
+                    onBackClick = {
                         currentScreen = "home"
                         currentCategory = null
                     },
                     onCategoryItemClick = { categoryItem ->
                         currentCategoryItem = categoryItem
                         currentScreen = "category_songs"
-                    }
+                    },
+                    listState = browseListState,
+                    artistListState = browseArtistListState
                 )
             }
         }

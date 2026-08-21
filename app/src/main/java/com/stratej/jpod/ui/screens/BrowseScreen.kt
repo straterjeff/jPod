@@ -2,6 +2,7 @@ package com.stratej.jpod.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,8 @@ fun BrowseScreen(
     category: BrowseCategory,
     onBackClick: () -> Unit,
     onCategoryItemClick: (CategoryItem) -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
+    artistListState: LazyListState = rememberLazyListState(),
     viewModel: MusicPlayerViewModel = viewModel()
 ) {
     val categories by viewModel.categories.collectAsState()
@@ -140,6 +143,7 @@ fun BrowseScreen(
                     if (category == BrowseCategory.ALBUMS && artistGroups.isNotEmpty()) {
                         // Albums grouped by artist
                         LazyColumn(
+                            state = artistListState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp)
                         ) {
@@ -159,6 +163,7 @@ fun BrowseScreen(
                     } else {
                         // Regular categories list (Artists, Genres, flat Albums)
                         LazyColumn(
+                            state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp)
                         ) {
